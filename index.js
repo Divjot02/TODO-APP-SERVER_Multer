@@ -59,35 +59,37 @@ function saveTodoInFile(todo, callback) {
 }
 
 app.post("/todo", (req, res) => {
-  if (!req.file) {
-    console.log("nofile");
-    return;
-  }
-  const pic = { filename: req.file.filename, path: req.file.path };
-  const todo = {
-    todoText: req.body.task,
-    id: Date.now().toString(),
-    isComplete: false,
-    pic: pic,
-  };
-  // console.log(todo);
-  readAllTodos(function (err, data) {
-    if (err) {
-      res.status(500).send("error");
+  if (req.body.task.trim() !== "") {
+    if (!req.file) {
+      console.log("nofile");
       return;
     }
-    data.push(todo);
-
-    saveTodoInFile(data, function (err) {
+    const pic = { filename: req.file.filename, path: req.file.path };
+    const todo = {
+      todoText: req.body.task,
+      id: Date.now().toString(),
+      isComplete: false,
+      pic: pic,
+    };
+    // console.log(todo);
+    readAllTodos(function (err, data) {
       if (err) {
         res.status(500).send("error");
         return;
       }
-      //send this object
-      res.status(200).json(todo);
-      // res.redirect("/");
+      data.push(todo);
+
+      saveTodoInFile(data, function (err) {
+        if (err) {
+          res.status(500).send("error");
+          return;
+        }
+        //send this object
+        res.status(200).json(todo);
+        // res.redirect("/");
+      });
     });
-  });
+  }
 });
 
 app.get("/todo-data", function (req, res) {
