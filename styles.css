@@ -1,0 +1,76 @@
+body {
+    font-family: Arial, sans-serif;
+  }
+
+  .container {
+    display: flex;
+    gap: 25px;
+    max-width: 800px;
+    margin: 50px auto;
+    padding: 20px;
+  }
+  h2{
+    margin-left: 10px;
+    margin-right: 10px;
+   text-transform: uppercase;
+  
+  }
+  p{
+    margin-left: 10px;
+    margin-right: 10px;
+    font-size: 12px;
+  }
+
+  .left-pane {
+    
+    display: flex;
+    flex-direction: column;
+    width:fit-content;
+    height: fit-content;
+    border-style:solid;
+    border-color: burlywood;
+    /* overflow-y: auto; */
+  
+  }
+
+  .right-pane {
+    flex-grow: 1;
+    flex-direction: column;
+  }
+  form {
+    margin-top: 10px;
+  }
+  
+  input[type="text"] {
+   
+    padding: 10px;
+    border: none;
+    font-size: 35px;
+    font-style: oblique;
+    font-weight: bold;
+  }
+  .complete{
+    text-decoration: line-through;
+  }
+ div.show-item{
+  display: flex;
+  flex-direction: column;
+ }
+  .items{
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid #ccc;
+    padding: 6px;
+    margin:2px 10px;
+  }
+  .btn{
+    
+    margin-left: 10px;
+    margin-right: 10px;
+    float: right;
+  }
+  input[type="checkbox"]{
+    margin-left: 10px;
+    margin-right: 10px;
+
+  }
