@@ -66,7 +66,7 @@ app.post("/todo", (req, res) => {
     }
     const pic = { filename: req.file.filename, path: req.file.path };
     const todo = {
-      todoText: req.body.task,
+      todoText: req.body.task.trim(),
       id: Date.now().toString(),
       isComplete: false,
       pic: pic,
