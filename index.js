@@ -60,17 +60,17 @@ function saveTodoInFile(todo, callback) {
 
 app.post("/todo", (req, res) => {
   if (!req.file) {
-    console.log("nofile");
+    console.log("no file");
     return;
   }
   const pic = { filename: req.file.filename, path: req.file.path };
+
   const todo = {
     todoText: req.body.task,
     id: Date.now().toString(),
     isComplete: false,
     pic: pic,
   };
-  // console.log(todo);
   readAllTodos(function (err, data) {
     if (err) {
       res.status(500).send("error");
@@ -85,7 +85,6 @@ app.post("/todo", (req, res) => {
       }
       //send this object
       res.status(200).json(todo);
-      // res.redirect("/");
     });
   });
 });
@@ -99,6 +98,7 @@ app.get("/todo-data", function (req, res) {
     res.status(200).json(data);
   });
 });
+
 app.put("/update", function (req, res) {
   const updId = req.body.id;
   const complete = req.body.isComplete;
@@ -122,6 +122,7 @@ app.put("/update", function (req, res) {
     });
   });
 });
+
 app.delete("/delete", function (req, res) {
   const delId = req.body.id;
   readAllTodos(function (err, data) {
@@ -129,7 +130,7 @@ app.delete("/delete", function (req, res) {
       res.status(500).send("error");
       return;
     }
-    //delete from publicfolder as well
+    //delete from public folder as well
     const delRecord = data.find((d) => d.id === delId);
     const path = delRecord.pic.path;
     fs.unlink(path, (err) => {
@@ -147,7 +148,6 @@ app.delete("/delete", function (req, res) {
         res.status(500).send("error");
         return;
       }
-
       res.status(200).send("Todo deleted");
     });
   });

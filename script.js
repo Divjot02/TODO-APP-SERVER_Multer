@@ -5,39 +5,30 @@ const showNode = document.getElementById("show-item");
 //when item is submitted
 
 formNode.addEventListener("submit", (e) => {
-  // if (e.key === "Enter") {
   e.preventDefault();
   const todoText = inputNode.value;
-  if (!todoText) {
+  if (todoText.trim() == "") {
     alert("Please enter a TODO");
     return;
   }
 
-  // assign unique id to todo-item and set the isComplete flag to false
-  // const todo = {
-  //   todoText,
-  //   id: Date.now().toString(),
-  //   isComplete: false,
-  // };
   //key/value pairs, keys will be the names of the form fields
   const formData = new FormData(formNode);
-  console.log(formData);
-  //fetch is promise based
-  //send a POST request
   inputNode.value = "";
+  //send a POST request
   fetch("/todo", {
     method: "POST",
     body: formData,
   })
     .then(function (response) {
       if (response.status === 200) {
+        //the received object
         return response.json();
       } else {
         alert("something weird happened");
       }
     })
     .then(function (todo) {
-      // console.log(msg);
       showTodoInUI(todo);
     });
   // }
@@ -47,6 +38,7 @@ formNode.addEventListener("submit", (e) => {
 fetch("/todo-data")
   .then(function (response) {
     if (response.status === 200) {
+      //the received object
       return response.json();
     } else {
       alert("something weird happened");
@@ -114,14 +106,11 @@ function updateById(checkId, isComplete) {
     body: JSON.stringify({ id: checkId, isComplete }),
   })
     .then(function (response) {
-      if (response.status === 200) {
-        return response.text();
-      } else {
+      if (response.status !== 200) {
         throw new Error("failed to modify status");
       }
     })
-    .then(function (msg) {
-      console.log(msg);
+    .then(function () {
       const item = document.getElementById(checkId);
       const itemText = item.querySelector("span");
       itemText.classList.toggle("complete");
@@ -137,14 +126,11 @@ function deleteById(deleteId) {
     body: JSON.stringify({ id: deleteId }),
   })
     .then(function (response) {
-      if (response.status === 200) {
-        return response.text();
-      } else {
+      if (response.status !== 200) {
         throw new Error("failed to delete");
       }
     })
-    .then(function (msg) {
-      console.log(msg);
+    .then(function () {
       const item = document.getElementById(deleteId);
       item.remove();
     })
