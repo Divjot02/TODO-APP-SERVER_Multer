@@ -2,7 +2,23 @@ const express = require("express");
 const fs = require("fs");
 const app = express();
 const multer = require("multer");
-// Multer adds a body object and a file or files object to the request object. The body object contains the values of the text fields of the form, the file or files object contains the files uploaded via the form.
+const mongoose = require("mongoose");
+mongoose
+  .connect("mongodb://localhost:27017/tododb", { useNewUrlParser: true })
+  .then(() => {
+    console.log("Connected to MongoDB successfully!");
+  })
+  .catch((err) => {
+    console.error("Error connecting to MongoDB:", err);
+  });
+//creating a schema
+const todoSchema = new mongoose.Schema({
+  todoText: String,
+  pic: { filename: String, path: String },
+  isComplete: Boolean,
+});
+// create a model for schema
+const TodoModel = mongoose.model("TodoList", todoSchema);
 
 //dest:or storage: where to upload the files
 // const upload = multer({ dest: "public/" });
@@ -19,6 +35,7 @@ const upload = multer({ storage: storage });
 app.use(express.json());
 app.use(upload.single("todoImg"));
 app.use(express.static("public"));
+
 app.get("/", (req, res) => {
   res.sendFile(__dirname + "/index.html");
 });
@@ -28,110 +45,57 @@ app.get("/styles.css", (req, res) => {
 app.get("/script.js", (req, res) => {
   res.sendFile(__dirname + "/script.js");
 });
-function readAllTodos(callback) {
-  fs.readFile("./store.json", "utf-8", function (err, data) {
-    if (err) {
-      callback(err);
-      return;
-    }
-
-    if (data.length === 0) {
-      data = "[]";
-    }
-
-    try {
-      data = JSON.parse(data);
-      callback(null, data);
-    } catch (err) {
-      callback(err);
-    }
-  });
-}
-function saveTodoInFile(todo, callback) {
-  fs.writeFile("./store.json", JSON.stringify(todo), function (err) {
-    if (err) {
-      callback(err);
-      return;
-    }
-
-    callback(null);
-  });
-}
-
-app.post("/todo", (req, res) => {
+//POST request
+app.post("/todo", async (req, res) => {
   if (!req.file) {
     console.log("no file");
     return;
   }
-  const pic = { filename: req.file.filename, path: req.file.path };
-
-  const todo = {
+  pic = { filename: req.file.filename, path: req.file.path };
+  const todo = new TodoModel({
     todoText: req.body.task,
-    id: Date.now().toString(),
-    isComplete: false,
     pic: pic,
-  };
-  readAllTodos(function (err, data) {
-    if (err) {
-      res.status(500).send("error");
-      return;
-    }
-    data.push(todo);
-
-    saveTodoInFile(data, function (err) {
-      if (err) {
-        res.status(500).send("error");
-        return;
-      }
-      //send this object
-      res.status(200).json(todo);
-    });
+    isComplete: false,
   });
+  try {
+    await todo.save();
+    res.status(200).json(todo);
+  } catch (err) {
+    console.log(err);
+    res.status(500).send("error");
+  }
 });
 
-app.get("/todo-data", function (req, res) {
-  readAllTodos(function (err, data) {
-    if (err) {
-      res.status(500).send("error");
-      return;
-    }
+app.get("/todo-data", async function (req, res) {
+  //read the data from database and send data as res
+  try {
+    const data = await TodoModel.find({});
+    console.log(data);
     res.status(200).json(data);
-  });
+  } catch (err) {
+    console.log(err);
+    res.status(500).send("error");
+  }
 });
 
-app.put("/update", function (req, res) {
-  const updId = req.body.id;
-  const complete = req.body.isComplete;
-  readAllTodos(function (err, data) {
-    if (err) {
-      res.status(500).send("error");
-      return;
-    }
-    //find the todo with id to modify its status
-    const updateddata = data.find((d) => d.id === updId);
-
-    updateddata.isComplete = complete;
-    //save the modified data into file
-    saveTodoInFile(data, (err) => {
-      if (err) {
-        res.status(500).send("error");
-        return;
-      }
-
-      res.status(200).send("Todo status changed");
-    });
-  });
+app.put("/update", async function (req, res) {
+  try {
+    const updId = req.body.id;
+    const complete = req.body.isComplete;
+    //find the todo with updId to modify its status
+    await TodoModel.updateOne({ _id: updId }, { isComplete: complete });
+    res.status(200).send("Todo status changed");
+  } catch (err) {
+    console.log(err);
+    res.status(500).send("error");
+  }
 });
 
-app.delete("/delete", function (req, res) {
-  const delId = req.body.id;
-  readAllTodos(function (err, data) {
-    if (err) {
-      res.status(500).send("error");
-      return;
-    }
-    //delete from public folder as well
-    const delRecord = data.find((d) => d.id === delId);
+app.delete("/delete", async function (req, res) {
+  try {
+    const delId = req.body.id;
+    //read the db to FIND the path of pic to be deleted in order to delete from public folder as well
+    const delRecord = await TodoModel.findOne({ _id: delId });
     const path = delRecord.pic.path;
     fs.unlink(path, (err) => {
       if (err) {
@@ -140,17 +104,13 @@ app.delete("/delete", function (req, res) {
         console.log("File deleted successfully");
       }
     });
-    //get the data after deletion
-    const updateddata = data.filter((d) => d.id !== delId);
-    //save this into file
-    saveTodoInFile(updateddata, (err) => {
-      if (err) {
-        res.status(500).send("error");
-        return;
-      }
-      res.status(200).send("Todo deleted");
-    });
-  });
+    //delete the todo from db
+    await TodoModel.deleteOne({ id: delId });
+    res.status(200).json({ msg: "Deleted successfully" });
+  } catch (err) {
+    console.log(err);
+    res.status(500).send("error");
+  }
 });
 
 app.listen(3000, () => {

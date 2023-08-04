@@ -54,7 +54,7 @@ fetch("/todo-data")
 //create the DOM structure and add desired event listeners
 function showTodoInUI(todo) {
   const todoDiv = document.createElement("div");
-  todoDiv.setAttribute("id", todo.id);
+  todoDiv.setAttribute("id", todo._id);
   todoDiv.classList.add("items");
   const todoTextNode = document.createElement("span");
   const todoImgNode = document.createElement("img");
